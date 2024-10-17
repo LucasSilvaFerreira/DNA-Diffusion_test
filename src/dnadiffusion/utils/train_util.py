@@ -151,7 +151,7 @@ class TrainLoop:
             f"checkpoints/epoch_{epoch}_{self.model_name}.pt",
         )
 
-    def load(self, path):
+    def load(self, path, start_train=True):
         checkpoint_dict = torch.load(path)
         self.model.load_state_dict(checkpoint_dict["model"])
         self.optimizer.load_state_dict(checkpoint_dict["optimizer"])
@@ -160,4 +160,7 @@ class TrainLoop:
         if self.accelerator.is_main_process:
             self.ema_model.load_state_dict(checkpoint_dict["ema_model"])
 
-        self.train_loop()
+        if start_train:
+            self.train_loop()
+        else:
+            pass
