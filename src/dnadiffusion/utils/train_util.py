@@ -28,6 +28,7 @@ class TrainLoop:
         image_size: int = 200,
         num_sampling_to_compare_cells: int = 1000,
         batch_size: int = 960,
+        metric_function=None,
     ):
         self.encode_data = data
         self.model = model
@@ -40,7 +41,7 @@ class TrainLoop:
         self.model_name = model_name
         self.image_size = image_size
         self.num_sampling_to_compare_cells = num_sampling_to_compare_cells
-
+        self.metric_function=metric_function
         if self.accelerator.is_main_process:
             self.ema = EMA(0.995)
             self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
@@ -130,6 +131,9 @@ class TrainLoop:
             cell_types=self.encode_data["cell_types"],
             number_of_samples=int(self.num_sampling_to_compare_cells / 10),
         )
+        print(synt_df)
+        if self.metric_function != None:
+          self.metric_function(input_fasta="synthetic_motifs.fasta")
         #add metrics as a function instead to force it
         #may train loop can receive a function
         # self.seq_similarity = generate_similarity_using_train(self.encode_data["X_train"])
