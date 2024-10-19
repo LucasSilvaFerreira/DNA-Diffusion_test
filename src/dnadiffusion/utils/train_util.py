@@ -130,14 +130,16 @@ class TrainLoop:
             cell_types=self.encode_data["cell_types"],
             number_of_samples=int(self.num_sampling_to_compare_cells / 10),
         )
-        self.seq_similarity = generate_similarity_using_train(self.encode_data["X_train"])
-        self.train_kl = compare_motif_list(synt_df, self.encode_data["train_motifs"])
-        self.test_kl = compare_motif_list(synt_df, self.encode_data["test_motifs"])
-        self.shuffle_kl = compare_motif_list(synt_df, self.encode_data["shuffle_motifs"])
-        print("Similarity", self.seq_similarity, "Similarity")
-        print("KL_TRAIN", self.train_kl, "KL")
-        print("KL_TEST", self.test_kl, "KL")
-        print("KL_SHUFFLE", self.shuffle_kl, "KL")
+        #add metrics as a function instead to force it
+        #may train loop can receive a function
+        # self.seq_similarity = generate_similarity_using_train(self.encode_data["X_train"])
+        # self.train_kl = compare_motif_list(synt_df, self.encode_data["train_motifs"])
+        # self.test_kl = compare_motif_list(synt_df, self.encode_data["test_motifs"])
+        # self.shuffle_kl = compare_motif_list(synt_df, self.encode_data["shuffle_motifs"])
+        # print("Similarity", self.seq_similarity, "Similarity")
+        # print("KL_TRAIN", self.train_kl, "KL")
+        # print("KL_TEST", self.test_kl, "KL")
+        # print("KL_SHUFFLE", self.shuffle_kl, "KL")
 
     def save_model(self, epoch):
         checkpoint_dict = {
@@ -148,13 +150,12 @@ class TrainLoop:
         }
         torch.save(
             checkpoint_dict,
-            f"checkpoints/epoch_{epoch}_{self.model_name}.pt",
+            f"epoch_{epoch}_{self.model_name}.pt",
         )
 
     def load(self, path, start_train=True):
         checkpoint_dict = torch.load(path)
         self.model.load_state_dict(checkpoint_dict["model"], strict=False)
-
         self.optimizer.load_state_dict(checkpoint_dict["optimizer"])
         self.start_epoch = checkpoint_dict["epoch"]
 

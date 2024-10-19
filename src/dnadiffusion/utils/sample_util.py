@@ -74,8 +74,10 @@ def create_sample(
             f.write("\n".join(final_sequences))
         return
 
-    df_motifs_count_syn = extract_motifs(final_sequences)
-    return df_motifs_count_syn
+    #df_motifs_count_syn = extract_motifs(final_sequences)
+    return pd.DataFrame()
+    #df_motifs_count_syn = extract_motifs(final_sequences)
+    #return df_motifs_count_syn
 
 
 def extract_motifs(sequence_list: list):
