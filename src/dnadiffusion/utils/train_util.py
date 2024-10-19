@@ -153,7 +153,8 @@ class TrainLoop:
 
     def load(self, path, start_train=True):
         checkpoint_dict = torch.load(path)
-        self.model.load_state_dict(checkpoint_dict["model"])
+        self.model.load_state_dict(checkpoint_dict["model"], strict=False)
+
         self.optimizer.load_state_dict(checkpoint_dict["optimizer"])
         self.start_epoch = checkpoint_dict["epoch"]
 
