@@ -24,34 +24,39 @@ def load_data(
     ],
     limit_total_sequences: int = 0,
     num_sampling_to_compare_cells: int = 1000,
-    load_saved_data: bool = False,
-):
+    load_saved_data: bool = False):
     # Preprocessing data
     if load_saved_data:
         with open(saved_data_path, "rb") as f:
             encode_data = pickle.load(f)
 
-    else:
-        encode_data = preprocess_data(
-            input_csv=data_path,
-            subset_list=subset_list,
-            limit_total_sequences=limit_total_sequences,
-            number_of_sequences_to_motif_creation=num_sampling_to_compare_cells,
-        )
+    # else:
+    #     encode_data = preprocess_data(
+    #         input_csv=data_path,
+    #         subset_list=subset_list,
+    #         limit_total_sequences=limit_total_sequences,
+    #         number_of_sequences_to_motif_creation=num_sampling_to_compare_cells,
+    #     )
 
-    # Splitting enocde data into train/test/shuffle
-    train_motifs = encode_data["train"]["motifs"]
-    train_motifs_cell_specific = encode_data["train"]["final_subset_motifs"]
+    # # Splitting enocde data into train/test/shuffle
+    # train_motifs = encode_data["train"]["motifs"]
+    # train_motifs_cell_specific = encode_data["train"]["final_subset_motifs"]
 
-    test_motifs = encode_data["test"]["motifs"]
-    test_motifs_cell_specific = encode_data["test"]["final_subset_motifs"]
+    # test_motifs = encode_data["test"]["motifs"]
+    # test_motifs_cell_specific = encode_data["test"]["final_subset_motifs"]
 
-    shuffle_motifs = encode_data["train_shuffled"]["motifs"]
-    shuffle_motifs_cell_specific = encode_data["train_shuffled"]["final_subset_motifs"]
+    # shuffle_motifs = encode_data["train_shuffled"]["motifs"]
+    # shuffle_motifs_cell_specific = encode_data["train_shuffled"]["final_subset_motifs"]
 
     # Creating sequence dataset
-    df = encode_data["train"]["df"]
+    df = pd.read_csv(data_path, sep='\t')
+
+    df = df.query("data_label ==   'training'  ")
+    df = df[df['TAG'].apply(lambda x : x in subset_list)]
+    print (df)
     nucleotides = ["A", "C", "G", "T"]
+    print(df.iloc[0]['sequence'])
+   
     x_train_seq = np.array([one_hot_encode(x, nucleotides, 200) for x in df["sequence"] if "N" not in x])
     X_train = np.array([x.T.tolist() for x in x_train_seq])
     X_train[X_train == 0] = -1
@@ -62,14 +67,19 @@ def load_data(
     cell_types = list(numeric_to_tag.keys())
     x_train_cell_type = torch.tensor([tag_to_numeric[x] for x in df["TAG"]])
 
+
+
+
+
+
     # Collecting variables into a dict
     encode_data_dict = {
-        "train_motifs": train_motifs,
-        "train_motifs_cell_specific": train_motifs_cell_specific,
-        "test_motifs": test_motifs,
-        "test_motifs_cell_specific": test_motifs_cell_specific,
-        "shuffle_motifs": shuffle_motifs,
-        "shuffle_motifs_cell_specific": shuffle_motifs_cell_specific,
+        "train_motifs": [],
+        "train_motifs_cell_specific": [],
+        "test_motifs": [],
+        "test_motifs_cell_specific": [],
+        "shuffle_motifs": [],
+        "shuffle_motifs_cell_specific": [],
         "tag_to_numeric": tag_to_numeric,
         "numeric_to_tag": numeric_to_tag,
         "cell_types": cell_types,
@@ -173,7 +183,7 @@ def preprocess_data(
     df_train_shuffled["sequence"] = df_train_shuffled["sequence"].apply(
         lambda x: "".join(random.sample(list(x), len(x)))
     )
-
+  
     # Getting motif information from the sequences
     train = generate_motifs_and_fastas(df_train, "train", number_of_sequences_to_motif_creation, subset_list)
     test = generate_motifs_and_fastas(df_test, "test", number_of_sequences_to_motif_creation, subset_list)
