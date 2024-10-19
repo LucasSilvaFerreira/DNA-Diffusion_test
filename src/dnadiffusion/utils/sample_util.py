@@ -73,9 +73,12 @@ def create_sample(
         with open(f"final_{conditional_numeric_to_tag[group_number]}.txt", "w") as f:
             f.write("\n".join(final_sequences))
         return
-
+    save_seqs = open("synthetic_motifs.fasta", "w")
+    save_seqs.write("\n".join(final_sequences))
+    save_seqs.close()
     #df_motifs_count_syn = extract_motifs(final_sequences)
     return pd.DataFrame()
+
     #df_motifs_count_syn = extract_motifs(final_sequences)
     #return df_motifs_count_syn
 
