@@ -29,10 +29,12 @@ class TrainLoop:
         num_sampling_to_compare_cells: int = 1000,
         batch_size: int = 960,
         metric_function=None,
+        learning_rate=1e-4
     ):
         self.encode_data = data
+        self.learning_rate=learning_rate
         self.model = model
-        self.optimizer = Adam(self.model.parameters(), lr=1e-4)
+        self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
         self.accelerator = accelerator
         self.epochs = epochs
         self.log_step_show = log_step_show
@@ -42,6 +44,7 @@ class TrainLoop:
         self.image_size = image_size
         self.num_sampling_to_compare_cells = num_sampling_to_compare_cells
         self.metric_function=metric_function
+
         if self.accelerator.is_main_process:
             self.ema = EMA(0.995)
             self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
