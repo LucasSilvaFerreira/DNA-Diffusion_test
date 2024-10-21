@@ -28,8 +28,10 @@ class TrainLoop:
         image_size: int = 200,
         num_sampling_to_compare_cells: int = 1000,
         batch_size: int = 960,
-        metric_function=None,
-        learning_rate=1e-4
+        metric_function=None, #how to type a function
+        learning_rate: float = 1e-4, 
+        selective_sampling_number :int = None
+
     ):
         self.encode_data = data
         self.learning_rate=learning_rate
@@ -44,7 +46,7 @@ class TrainLoop:
         self.image_size = image_size
         self.num_sampling_to_compare_cells = num_sampling_to_compare_cells
         self.metric_function=metric_function
-
+        self.selective_sampling_number = selective_sampling_number
         if self.accelerator.is_main_process:
             self.ema = EMA(0.995)
             self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
@@ -128,10 +130,14 @@ class TrainLoop:
 
         # Sample from the model
         print("saving")
+        print ('encoded data', self.encode_data["cell_types"])
+        print (self.encode_data["numeric_to_tag"])
+        print ('sampling only from cell number:', self.selective_sampling_number)
         synt_df = create_sample(
             self.accelerator.unwrap_model(self.model),
             conditional_numeric_to_tag=self.encode_data["numeric_to_tag"],
             cell_types=self.encode_data["cell_types"],
+            group_number= self.selective_sampling_number,
             number_of_samples=int(self.num_sampling_to_compare_cells / 10),
         )
         print(synt_df)
