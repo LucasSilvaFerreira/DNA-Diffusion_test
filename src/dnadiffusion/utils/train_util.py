@@ -139,6 +139,8 @@ class TrainLoop:
             cell_types=self.encode_data["cell_types"],
             group_number= self.selective_sampling_number,
             number_of_samples=int(self.num_sampling_to_compare_cells / 10),
+            cond_weight_to_metric=1
+
         )
         print(synt_df)
         if self.metric_function != None:
