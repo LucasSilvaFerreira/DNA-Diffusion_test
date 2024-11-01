@@ -1,5 +1,6 @@
 import copy
 from typing import Any
+from pathlib import Path
 
 import torch
 import torchvision.transforms as T
@@ -30,8 +31,10 @@ class TrainLoop:
         batch_size: int = 960,
         metric_function=None, #how to type a function
         learning_rate: float = 1e-4, 
-        selective_sampling_number :int = None
-
+        selective_sampling_number :int = None,
+        save_lora_function = None,
+        lora_path : str = '', 
+        lora_save_epoch:  int = 50,
     ):
         self.encode_data = data
         self.learning_rate=learning_rate
@@ -47,6 +50,13 @@ class TrainLoop:
         self.num_sampling_to_compare_cells = num_sampling_to_compare_cells
         self.metric_function=metric_function
         self.selective_sampling_number = selective_sampling_number
+
+        self.save_lora_function = save_lora_function 
+        self.lora_path = lora_path
+        self.lora_save_epoch = lora_save_epoch 
+
+
+
         if self.accelerator.is_main_process:
             self.ema = EMA(0.995)
             self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
@@ -93,6 +103,11 @@ class TrainLoop:
             if epoch % self.save_epoch == 0 and self.accelerator.is_main_process:
                 self.save_model(epoch)
 
+
+            # Saving Lora
+            if self.save_lora_function and epoch % self.lora_save_epoch == 0 and self.accelerator.is_main_process:
+                self.save_lora_model(epoch)
+
     def train_step(self, batch):
         x, y = batch
 
@@ -124,6 +139,7 @@ class TrainLoop:
                 },
                 step=self.global_step,
             )
+
 
     def sample(self):
         self.model.eval()
@@ -167,6 +183,22 @@ class TrainLoop:
             checkpoint_dict,
             f"epoch_{epoch}_{self.model_name}.pt",
         )
+
+
+    def save_lora_model(self, epoch):
+      path_use =  self.lora_path 
+      if self.lora_path == '': 
+        path_use = '.'
+      Path(path_use).mkdir(parents=True, exist_ok=True)
+      final_path_name_and_file = path_use + f'/{str(epoch)}_filepath.pth'
+      self.save_lora_function(self.model.model,  final_path_name_and_file.replace('//','/'))
+      print (f'Lora saved in:  {final_path_name_and_file}')
+
+
+
+
+
+
 
     def load(self, path, start_train=True):
         checkpoint_dict = torch.load(path)
