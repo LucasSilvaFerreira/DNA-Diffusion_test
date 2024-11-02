@@ -12,6 +12,7 @@ class Diffusion(nn.Module):
         self,
         model,
         timesteps,
+        negative_prompting=False
     ):
         super().__init__()
         self.model = model
@@ -33,7 +34,12 @@ class Diffusion(nn.Module):
         self.register_buffer(
             "posterior_variance",
             betas * (1.0 - alphas_cumprod_prev) / (1.0 - alphas_cumprod),
+        
+        
         )
+
+        self.negative_prompting = negative_prompting
+
 
     @property
     def device(self):
@@ -71,8 +77,18 @@ class Diffusion(nn.Module):
             # make 0 index unconditional
             # double the batch
             classes = classes.repeat(2)
+
             context_mask = context_mask.repeat(2)
-            context_mask[n_sample:] = 0.0
+            if not self.negative_prompting:
+              context_mask[n_sample:] = 0.0
+            else:
+              print ('this are the classes')
+              print (classes, type(classes))
+               
+              context_mask[n_sample:] = 0
+              #np.choice([c for c_i in [1,2,3,4] if c != classes[0]]
+
+
             sampling_fn = partial(
                 self.p_sample_guided,
                 classes=classes,

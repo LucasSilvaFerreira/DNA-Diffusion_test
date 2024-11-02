@@ -35,6 +35,7 @@ class TrainLoop:
         save_lora_function = None,
         lora_path : str = '', 
         lora_save_epoch:  int = 50,
+        negative_prompting: bool = False,
     ):
         self.encode_data = data
         self.learning_rate=learning_rate
@@ -54,7 +55,7 @@ class TrainLoop:
         self.save_lora_function = save_lora_function 
         self.lora_path = lora_path
         self.lora_save_epoch = lora_save_epoch 
-
+        self.negative_prompting = negative_prompting
 
 
         if self.accelerator.is_main_process:
@@ -149,6 +150,11 @@ class TrainLoop:
         print ('encoded data', self.encode_data["cell_types"])
         print (self.encode_data["numeric_to_tag"])
         print ('sampling only from cell number:', self.selective_sampling_number)
+        
+        if self.negative_prompting:
+          print ('negative prompting')
+          self.model.negative_prompting = True
+        
         synt_df = create_sample(
             self.accelerator.unwrap_model(self.model),
             conditional_numeric_to_tag=self.encode_data["numeric_to_tag"],
