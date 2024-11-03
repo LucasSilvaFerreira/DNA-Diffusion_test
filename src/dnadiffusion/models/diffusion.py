@@ -1,5 +1,5 @@
 from functools import partial
-
+import random
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -76,18 +76,20 @@ class Diffusion(nn.Module):
             context_mask = torch.ones_like(classes).to(device)
             # make 0 index unconditional
             # double the batch
-            classes = classes.repeat(2)
-
             context_mask = context_mask.repeat(2)
-            if not self.negative_prompting:
-              context_mask[n_sample:] = 0.0
-            else:
-              print ('this are the classes')
-              print (classes, type(classes))
-               
-              context_mask[n_sample:] = 0
-              #np.choice([c for c_i in [1,2,3,4] if c != classes[0]]
 
+            if not self.negative_prompting:
+              print ('Not using negative...')
+              classes = classes.repeat(2)
+              context_mask[n_sample:] = 0.0
+            else: #the context mask will not be used but we will random sample for each class 
+              print ('These are the classes')
+              print (classes, type(classes))
+              target_class = classes[0] #Assuming that just one class will be conditioned
+              target_choices = [c_i for c_i in [1,2,3,4] if c_i != target_class]
+              choices = torch.tensor([ random.choice( target_choices)  for s_r in range(len(classes)) ]).to(device)  
+              
+              classes =  torch.cat((classes, choices), dim=0)
 
             sampling_fn = partial(
                 self.p_sample_guided,
